@@ -103,19 +103,19 @@ class YouTubeParser(private val json: Json) {
             when (key) {
                 in SKIPPED_RENDERERS -> true
                 "videoRenderer" -> {
-                    decode<VideoRenderer>(value)?.let { results.putIfAbsent(YtRef.Video(it.videoId).path, it.toSAnime()) }
+                    decode<VideoRenderer>(value)?.let { results.addIfAbsent(YtRef.Video(it.videoId).path, it.toSAnime()) }
                     true
                 }
                 "channelRenderer" -> {
-                    decode<ChannelRenderer>(value)?.let { results.putIfAbsent(YtRef.Channel(it.channelId).path, it.toSAnime()) }
+                    decode<ChannelRenderer>(value)?.let { results.addIfAbsent(YtRef.Channel(it.channelId).path, it.toSAnime()) }
                     true
                 }
                 "playlistRenderer" -> {
-                    decode<PlaylistRenderer>(value)?.let { results.putIfAbsent(YtRef.Playlist(it.playlistId).path, it.toSAnime()) }
+                    decode<PlaylistRenderer>(value)?.let { results.addIfAbsent(YtRef.Playlist(it.playlistId).path, it.toSAnime()) }
                     true
                 }
                 "lockupViewModel" -> {
-                    lockupToSAnime(value)?.let { results.putIfAbsent(it.url, it) }
+                    lockupToSAnime(value)?.let { results.addIfAbsent(it.url, it) }
                     true
                 }
                 "continuationItemRenderer" -> {
@@ -334,6 +334,11 @@ class YouTubeParser(private val json: Json) {
     }
 
     // ============================== Helpers ==============================
+
+    /** `putIfAbsent` without the API 24 requirement. */
+    private fun <K, V> MutableMap<K, V>.addIfAbsent(key: K, value: V) {
+        if (!containsKey(key)) put(key, value)
+    }
 
     private fun continuationToken(renderer: JsonObject): String? =
         decode<ContinuationItemRenderer>(renderer)?.continuationEndpoint?.continuationCommand?.token
